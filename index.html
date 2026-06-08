@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colle Bercia · Osservatorio Climatico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090F;--bg2:#0C1019;--surf:#111825;--surf2:#16202E;--surf3:#1C2A3A;
+  --border:rgba(255,255,255,0.055);--border2:rgba(255,255,255,0.11);
+  --text:#E8EEF8;--text2:#8A9BBF;--dim:#3A4D68;
+  --blue:#3B9EFF;--blue-d:rgba(59,158,255,0.15);--blue-b:rgba(59,158,255,0.3);
+  --teal:#00D0A0;--teal-d:rgba(0,208,160,0.12);--teal-b:rgba(0,208,160,0.28);
+  --coral:#FF5C35;--coral-d:rgba(255,92,53,0.12);--coral-b:rgba(255,92,53,0.28);
+  --amber:#FFB020;--amber-d:rgba(255,176,32,0.12);--amber-b:rgba(255,176,32,0.28);
+  --ice:#7AB8F0;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+
+/* ── HERO ─────────────────────────────── */
+.hero{
+  position:relative;padding:5rem 4rem 7rem;
+  background:linear-gradient(145deg,#0A1528 0%,#07090F 55%,#0D0A18 100%);
+  overflow:hidden;min-height:420px;display:flex;flex-direction:column;justify-content:flex-end;
+}
+.hero-glow-a{position:absolute;top:-20%;right:-5%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(59,158,255,0.07) 0%,transparent 65%);pointer-events:none}
+.hero-glow-b{position:absolute;bottom:10%;left:20%;width:350px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(0,208,160,0.045) 0%,transparent 70%);pointer-events:none}
+
+.hero-tag{
+  position:absolute;top:3.5rem;left:4rem;
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);
+  letter-spacing:2.5px;text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-tag::before{content:'';width:20px;height:1px;background:var(--blue)}
+
+.hero-title{
+  font-family:'Cormorant Garamond',serif;font-weight:300;
+  font-size:clamp(60px,9vw,108px);line-height:.9;letter-spacing:-3px;
+  color:var(--text);margin-bottom:.75rem;
+  animation:fadeUp .8s ease both;
+}
+.hero-title em{font-style:italic;color:var(--blue)}
+
+.hero-byline{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--text2);letter-spacing:1.5px;margin-bottom:2.5rem;
+  animation:fadeUp .8s .1s ease both;
+}
+
+.hero-kpis{
+  display:grid;grid-template-columns:repeat(4,auto);gap:2.5rem;width:fit-content;
+  animation:fadeUp .8s .2s ease both;
+}
+.hkpi-val{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;line-height:1;color:var(--text);display:block;margin-bottom:3px}
+.hkpi-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase}
+
+.mountain-svg{position:absolute;bottom:0;left:0;width:100%;height:90px;pointer-events:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV ──────────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,9,15,.88);backdrop-filter:blur(16px);
+  border-bottom:.5px solid var(--border);
+  padding:0 4rem;display:flex;align-items:center;gap:0;
+}
+.nav-brand{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:1.5px;margin-right:2rem;white-space:nowrap}
+.nav-tab{
+  padding:.9rem 1.2rem;border:none;background:none;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.5px;
+  color:var(--dim);border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;white-space:nowrap;
+}
+.nav-tab:hover{color:var(--text2)}
+.nav-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* ── SECTIONS ─────────────────────────── */
+.section{display:none;padding:3rem 4rem;max-width:1120px;margin:0 auto;animation:fadeUp .3s ease both}
+.section.active{display:block}
+
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--text);letter-spacing:-.5px;margin-bottom:4px}
+.sec-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:.8px;margin-bottom:2rem}
+
+/* ── CARDS ────────────────────────────── */
+.card{background:var(--surf);border:.5px solid var(--border);border-radius:14px;padding:1.5rem;transition:border-color .25s}
+.card:hover{border-color:var(--border2)}
+.card-h{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--text);margin-bottom:2px}
+.card-s{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text2);letter-spacing:.5px;margin-bottom:12px}
+.card-lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.card-val{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;line-height:1;margin-bottom:3px}
+.card-note{font-size:11px;color:var(--text2)}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g21{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;margin-bottom:12px}
+.gap0{margin-bottom:0}
+
+.chart-wrap{position:relative;width:100%}
+.mb12{margin-bottom:12px}
+
+/* ── LEGEND ───────────────────────────── */
+.leg{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px}
+.li{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text2)}
+.sq{width:10px;height:10px;border-radius:2px;display:inline-block}
+.ci{width:10px;height:10px;border-radius:50%;display:inline-block}
+.ln{width:16px;height:2px;display:inline-block}
+.ds{width:16px;height:0;border-top:2px dashed;display:inline-block}
+
+/* ── HIGHLIGHT BOXES ──────────────────── */
+.box{border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:12px;border:.5px solid}
+.box-blue{background:var(--blue-d);border-color:var(--blue-b)}
+.box-amber{background:var(--amber-d);border-color:var(--amber-b)}
+.box-teal{background:var(--teal-d);border-color:var(--teal-b)}
+.insight{font-size:13px;color:var(--text2);line-height:1.85}
+.insight strong{color:var(--text);font-weight:500}
+.insight em{color:var(--teal);font-style:normal}
+.insight mark{background:rgba(255,176,32,.18);color:var(--amber);padding:1px 5px;border-radius:3px}
+
+/* ── FESTIVAL SECTION ─────────────────── */
+.risk-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.risk-card{border-radius:12px;padding:1.2rem;border:.5px solid;text-align:center}
+.risk-card.ok{background:var(--teal-d);border-color:var(--teal-b)}
+.risk-card.warn{background:var(--amber-d);border-color:var(--amber-b)}
+.risk-card.bad{background:var(--coral-d);border-color:var(--coral-b)}
+.rpct{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;line-height:1;margin-bottom:6px}
+.risk-card.ok .rpct{color:var(--teal)}.risk-card.warn .rpct{color:var(--amber)}.risk-card.bad .rpct{color:var(--coral)}
+.rlbl{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+.rsub{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--text2)}
+
+/* ── CALENDAR ─────────────────────────── */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cel{border-radius:8px;padding:8px 6px;border:.5px solid;text-align:center;cursor:default;transition:transform .15s,border-color .15s}
+.cel:hover{transform:translateY(-2px);border-color:var(--border2)}
+.cel.dry{background:rgba(0,208,160,.07);border-color:rgba(0,208,160,.2)}
+.cel.one{background:rgba(255,176,32,.07);border-color:rgba(255,176,32,.2)}
+.cel.both{background:rgba(255,92,53,.09);border-color:rgba(255,92,53,.25)}
+.cyr{font-family:'JetBrains Mono',monospace;font-size:9px;margin-bottom:3px}
+.cel.dry .cyr{color:var(--teal)}.cel.one .cyr{color:var(--amber)}.cel.both .cyr{color:var(--coral)}
+.cico{font-size:13px;margin-bottom:2px}
+.cdet{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text2);line-height:1.3}
+
+/* ── DIVIDER ──────────────────────────── */
+.divider{height:.5px;background:var(--border);margin:1.5rem 0}
+
+/* ── FOOTER ───────────────────────────── */
+footer{border-top:.5px solid var(--border);padding:1.5rem 4rem;display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim)}
+
+/* ── RESPONSIVE ───────────────────────── */
+@media(max-width:800px){
+  .hero{padding:4rem 1.5rem 6rem}.hero-tag{left:1.5rem;top:2.5rem}
+  .hero-kpis{grid-template-columns:1fr 1fr;gap:1.5rem}
+  nav{padding:0 1rem;overflow-x:auto}
+  .section{padding:2rem 1.5rem}
+  .g4,.g3{grid-template-columns:1fr 1fr}
+  .g2,.g21{grid-template-columns:1fr}
+  .cal{grid-template-columns:repeat(4,1fr)}
+  .risk-strip{grid-template-columns:1fr}
+  footer{flex-direction:column;gap:6px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero">
+  <div class="hero-glow-a"></div>
+  <div class="hero-glow-b"></div>
+  <div class="hero-tag">Stazione Meteorologica · Piemonte · Alta Quota</div>
+
+  <h1 class="hero-title">Colle<br><em>Bercia</em></h1>
+  <p class="hero-byline">OSSERVATORIO CLIMATICO &nbsp;·&nbsp; 1997–2024 &nbsp;·&nbsp; 10.654 OSSERVAZIONI GIORNALIERE</p>
+
+  <div class="hero-kpis">
+    <div><span class="hkpi-val">3.2°C</span><span class="hkpi-lbl">Temp. media annua</span></div>
+    <div><span class="hkpi-val">700mm</span><span class="hkpi-lbl">Precipitazione annua</span></div>
+    <div><span class="hkpi-val">184gg</span><span class="hkpi-lbl">Gelo / anno</span></div>
+    <div><span class="hkpi-val">+0.63°C</span><span class="hkpi-lbl">Trend / decade</span></div>
+  </div>
+
+  <svg class="mountain-svg" viewBox="0 0 1440 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,90V58L90,28l100,24L340,8l120,38L580,4l100,34L820,14l120,32L1060,6l110,36L1300,18l140,30V90Z" fill="#07090F" opacity=".6"/>
+    <path d="M0,90V68l110,−14l140,18L440,46l100,24L660,32l110,22L900,28l130,28L1160,22l140,26l140,10V90Z" fill="#07090F"/>
+  </svg>
+</div>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <span class="nav-brand">CB · 26</span>
+  <button class="nav-tab active" onclick="showTab('panoramica',this)">Panoramica</button>
+  <button class="nav-tab" onclick="showTab('temperature',this)">Temperature</button>
+  <button class="nav-tab" onclick="showTab('precipitazioni',this)">Precipitazioni</button>
+  <button class="nav-tab" onclick="showTab('estate',this)">Estate</button>
+  <button class="nav-tab" onclick="showTab('festival',this)">MunCamp</button>
+</nav>
+
+<!-- ═══════════ PANORAMICA ═══════════ -->
+<div class="section active" id="tab-panoramica">
+  <div class="sec-title">Clima di alta quota</div>
+  <div class="sec-sub">COLLE BERCIA &nbsp;·&nbsp; SINTESI CLIMATICA 1997–2024</div>
+
+  <div class="g4">
+    <div class="card"><div class="card-lbl">T. media annua</div><div class="card-val" style="color:var(--teal)">3.2°C</div><div class="card-note">Anno più caldo: 2022 (4.93°C)</div></div>
+    <div class="card"><div class="card-lbl">Precip. annua</div><div class="card-val" style="color:var(--blue)">700mm</div><div class="card-note">Max: 1.158mm nel 2024</div></div>
+    <div class="card"><div class="card-lbl">Giorni di gelo</div><div class="card-val" style="color:var(--ice)">~184</div><div class="card-note">T min &lt; 0°C · 50% dei giorni</div></div>
+    <div class="card"><div class="card-lbl">Riscaldamento</div><div class="card-val" style="color:var(--coral)">+0.63°C</div><div class="card-note">Per decade · p &lt; 0.0001</div></div>
+  </div>
+
+  <div class="card mb12">
+    <div class="card-h">Climogramma mensile</div>
+    <div class="card-s">TEMPERATURE E PRECIPITAZIONI MEDIE · 1997–2024</div>
+    <div class="leg">
+      <span class="li"><span class="sq" style="background:rgba(59,158,255,.55)"></span>Precipitazione (mm · asse dx)</span>
+      <span class="li"><span class="ln" style="background:var(--coral);height:2px"></span>T massima</span>
+      <span class="li"><span class="ln" style="background:var(--teal);height:2px"></span>T media</span>
+      <span class="li"><span class="ds" style="border-color:var(--ice)"></span>T minima</span>
+    </div>
+    <div class="chart-wrap" style="height:300px"><canvas id="climoChart" role="img" aria-label="Climogramma mensile Colle Bercia 1997-2024">Gennaio il mese più freddo, maggio il più piovoso.</canvas></div>
+  </div>
+
+  <div class="box box-blue">
+    <p class="insight">Colle Bercia è una stazione di <strong>alta quota alpina</strong> con un clima rigido e un'estate breve. Cinque mesi su dodici hanno temperatura media sotto lo zero. Il picco estivo è a luglio (<em>11.9°C</em> di media). Il riscaldamento in atto è <strong>+1.8°C in 28 anni</strong> — il doppio della media globale, coerente con il pattern di amplificazione alpina.</p>
+  </div>
+</div>
+
+<!-- ═══════════ TEMPERATURE ═══════════ -->
+<div class="section" id="tab-temperature">
+  <div class="sec-title">Andamento termico</div>
+  <div class="sec-sub">TEMPERATURE 1997–2024 &nbsp;·&nbsp; TREND E DISTRIBUZIONE</div>
+
+  <div class="card mb12">
+    <div class="card-h">Temperatura media annua</div>
+    <div class="card-s">OLS REGRESSION · R²=0.35 · p&lt;0.0001 · TREND +0.63°C/DECADE</div>
+    <div class="leg">
+      <span class="li"><span class="ci" style="background:var(--teal)"></span>T media annua</span>
+      <span class="li"><span class="ds" style="border-color:var(--coral)"></span>Trend lineare</span>
+    </div>
+    <div class="chart-wrap" style="height:250px"><canvas id="tempTrendChart" role="img" aria-label="Temperatura media annua 1997-2024 con trend crescente">Da circa 3°C negli anni 2000 a quasi 5°C nel 2022-2023.</canvas></div>
+  </div>
+
+  <div class="g2">
+    <div class="card gap0">
+      <div class="card-h">Giorni di gelo per anno</div>
+      <div class="card-s">T MIN &lt; 0°C · IN LENTA DIMINUZIONE</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="frostChart" role="img" aria-label="Giorni di gelo per anno dal 1997 al 2024">Dai 202 giorni di gelo nel 2002 e 2010, ai 153 del 2022 e 2024.</canvas></div>
+    </div>
+    <div class="card gap0">
+      <div class="card-h">Giorni con T max &gt; 20°C</div>
+      <div class="card-s">ESTREME DI CALORE · NETTO AUMENTO</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="hotChart" role="img" aria-label="Giorni con temperatura massima sopra 20 gradi, in aumento">I giorni caldi aumentano significativamente dal 2012 in poi.</canvas></div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="card"><div class="card-lbl">Record caldo assoluto</div><div class="card-val" style="color:var(--coral)">+27.0°C</div><div class="card-note">26 giugno 2019 (T max)</div></div>
+    <div class="card"><div class="card-lbl">Record freddo assoluto</div><div class="card-val" style="color:var(--ice)">−22.8°C</div><div class="card-note">27 febbraio 2018 (T min)</div></div>
+    <div class="card"><div class="card-lbl">Escursione annua media</div><div class="card-val" style="color:var(--text)">15.4°C</div><div class="card-note">Tra T min gen. e T max lug.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ PRECIPITAZIONI ═══════════ -->
+<div class="section" id="tab-precipitazioni">
+  <div class="sec-title">Regime pluviometrico</div>
+  <div class="sec-sub">PRECIPITAZIONI 1997–2024 &nbsp;·&nbsp; TOTALI E DISTRIBUZIONE</div>
+
+  <div class="card mb12">
+    <div class="card-h">Precipitazioni totali annue</div>
+    <div class="card-s">MM TOTALI · MEDIA 700 MM/ANNO · VARIABILITÀ ELEVATA</div>
+    <div class="leg">
+      <span class="li"><span class="sq" style="background:rgba(59,158,255,.7)"></span>Anno sopra media</span>
+      <span class="li"><span class="sq" style="background:rgba(59,158,255,.28)"></span>Anno sotto media</span>
+      <span class="li"><span class="ds" style="border-color:rgba(150,165,180,.55)"></span>Media 700mm</span>
+    </div>
+    <div class="chart-wrap" style="height:250px"><canvas id="precipAnnChart" role="img" aria-label="Precipitazioni annue Colle Bercia 1997-2024">Minimo 275mm nel 2017, massimo 1.158mm nel 2024.</canvas></div>
+  </div>
+
+  <div class="g2">
+    <div class="card gap0">
+      <div class="card-h">Distribuzione mensile</div>
+      <div class="card-s">MM MEDI MENSILI · DOPPIO PICCO PRIMAVERA/AUTUNNO</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="precipMonthChart" role="img" aria-label="Precipitazioni mensili medie">Picco a maggio (99mm), minimo a febbraio (24mm).</canvas></div>
+    </div>
+    <div class="card gap0">
+      <div class="card-h">Frequenza giorni piovosi</div>
+      <div class="card-s">% GIORNI CON PRECIP. &gt; 0MM PER MESE</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="rainDaysChart" role="img" aria-label="Percentuale giorni piovosi per mese">La primavera ha la massima frequenza di giorni piovosi.</canvas></div>
+    </div>
+  </div>
+
+  <div class="g3">
+    <div class="card"><div class="card-lbl">Anno più piovoso</div><div class="card-val" style="color:var(--blue)">2024</div><div class="card-note">1.158 mm totali</div></div>
+    <div class="card"><div class="card-lbl">Anno più secco</div><div class="card-val" style="color:var(--amber)">2017</div><div class="card-note">Solo 275 mm totali</div></div>
+    <div class="card"><div class="card-lbl">Evento massimo</div><div class="card-val" style="color:var(--blue)">77.6mm</div><div class="card-note">6 novembre 2011</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ ESTATE ═══════════ -->
+<div class="section" id="tab-estate">
+  <div class="sec-title">Luglio &amp; Agosto</div>
+  <div class="sec-sub">ANALISI COMPARATIVA ESTATE &nbsp;·&nbsp; TREND E VARIABILITÀ 1997–2024</div>
+
+  <div class="g2">
+    <div class="card" style="border-color:var(--amber-b)">
+      <div class="card-lbl" style="color:var(--amber)">Luglio</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:var(--amber)">11.95°C</div><div style="font-size:11px;color:var(--text2)">T media mensile</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:var(--amber)">62mm</div><div style="font-size:11px;color:var(--text2)">Precip. media</div></div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:.5px solid var(--border)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--coral)">+1.27°C / decade &nbsp;★★★</div>
+        <div style="font-size:10.5px;color:var(--text2);margin-top:2px">R²=0.43 &nbsp;·&nbsp; p=0.0002</div>
+      </div>
+    </div>
+    <div class="card" style="border-color:var(--teal-b)">
+      <div class="card-lbl" style="color:var(--teal)">Agosto</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:var(--teal)">11.74°C</div><div style="font-size:11px;color:var(--text2)">T media mensile</div></div>
+        <div><div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:var(--teal)">63mm</div><div style="font-size:11px;color:var(--text2)">Precip. media</div></div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:.5px solid var(--border)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--coral)">+0.70°C / decade &nbsp;★</div>
+        <div style="font-size:10.5px;color:var(--text2);margin-top:2px">R²=0.17 &nbsp;·&nbsp; p=0.029</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="card-h">Temperatura media mensile — luglio vs agosto</div>
+    <div class="card-s">ANDAMENTO ANNUO CON LINEE DI TENDENZA · 1997–2024</div>
+    <div class="leg">
+      <span class="li"><span class="ci" style="background:var(--amber)"></span>Luglio</span>
+      <span class="li"><span class="ci" style="background:var(--teal)"></span>Agosto</span>
+      <span class="li"><span class="ds" style="border-color:rgba(255,92,53,.65)"></span>Trend lug. (+1.27°C/dec)</span>
+      <span class="li"><span class="ds" style="border-color:rgba(0,208,160,.45)"></span>Trend ago. (+0.70°C/dec)</span>
+    </div>
+    <div class="chart-wrap" style="height:260px"><canvas id="estateChart" role="img" aria-label="Temperatura media mensile luglio e agosto 1997-2024 con trend">Luglio si sta riscaldando quasi il doppio di agosto.</canvas></div>
+  </div>
+
+  <div class="card mb12">
+    <div class="card-h">Giorni con T max &gt; 20°C — luglio vs agosto</div>
+    <div class="card-s">ESTREMI DI CALDO · TENDENZA IN NETTO AUMENTO DAL 2012</div>
+    <div class="leg">
+      <span class="li"><span class="sq" style="background:rgba(255,176,32,.65)"></span>Luglio</span>
+      <span class="li"><span class="sq" style="background:rgba(0,208,160,.55)"></span>Agosto</span>
+    </div>
+    <div class="chart-wrap" style="height:200px"><canvas id="hotEstateChart" role="img" aria-label="Giorni caldi luglio e agosto per anno">Luglio 2015 raggiunge 19 giorni sopra i 20°C.</canvas></div>
+  </div>
+
+  <div class="box box-amber">
+    <p class="insight"><strong>Luglio si sta riscaldando quasi il doppio di agosto</strong> — +1.27°C/decade contro +0.70°C/decade. In 28 anni, luglio ha guadagnato <mark>~3.5°C</mark>: dal luglio 1997 (9.7°C media) al luglio 2024 (13.8°C). Il segnale è eccezionalmente forte (R²=0.43, p=0.0002). I due mesi restano praticamente identici come valori assoluti (<em>~12°C</em>), ma la dinamica di cambiamento è molto diversa.</p>
+  </div>
+</div>
+
+<!-- ═══════════ FESTIVAL ═══════════ -->
+<div class="section" id="tab-festival">
+  <div class="sec-title">MunCamp · 25–26 luglio</div>
+  <div class="sec-sub">RISCHIO PIOGGIA · ULTIMO WEEKEND DI LUGLIO · ANALISI 1997–2024</div>
+
+  <div class="risk-strip">
+    <div class="risk-card ok">
+      <div class="rpct">54%</div>
+      <div class="rlbl">Weekend asciutto</div>
+      <div class="rsub">15 anni su 28 &nbsp;·&nbsp; 0mm entrambi i giorni</div>
+    </div>
+    <div class="risk-card warn">
+      <div class="rpct">39%</div>
+      <div class="rlbl">Un giorno piovoso</div>
+      <div class="rsub">11 anni su 28 &nbsp;·&nbsp; media 8mm nel giorno colpito</div>
+    </div>
+    <div class="risk-card bad">
+      <div class="rpct">7%</div>
+      <div class="rlbl">Entrambi piovosi</div>
+      <div class="rsub">2 anni su 28 &nbsp;·&nbsp; 2001 e 2019</div>
+    </div>
+  </div>
+
+  <div class="g21">
+    <div class="card gap0">
+      <div class="card-h">Precipitazione per weekend — anno per anno</div>
+      <div class="card-s">MM SABATO E DOMENICA &nbsp;·&nbsp; 1997–2024</div>
+      <div class="leg">
+        <span class="li"><span class="sq" style="background:rgba(59,158,255,.7)"></span>Sabato</span>
+        <span class="li"><span class="sq" style="background:rgba(0,208,160,.6)"></span>Domenica</span>
+      </div>
+      <div class="chart-wrap" style="height:230px"><canvas id="weekendPrecipChart" role="img" aria-label="Precipitazioni weekend luglio 1997-2024">La maggior parte degli anni ha 0mm. Picco nel 2008 con 30mm il sabato.</canvas></div>
+    </div>
+    <div class="card gap0">
+      <div class="card-h">Intensità pioggia</div>
+      <div class="card-s">DISTRIBUZIONE MM NEI GIORNI PIOVOSI</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="intensityChart" role="img" aria-label="Distribuzione intensità precipitazioni nei giorni piovosi del weekend">Metà degli eventi è sotto i 10mm.</canvas></div>
+      <div class="box box-teal" style="margin-top:10px;margin-bottom:0;padding:.9rem 1rem">
+        <p class="insight" style="font-size:11.5px">Quando piove si tratta quasi sempre di <strong>temporali pomeridiani brevi</strong>, non pioggia continua. Media 7.9mm nel giorno colpito.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="card-h">Storico anno per anno</div>
+    <div class="card-s">VERDE = ASCIUTTO &nbsp;·&nbsp; ARANCIO = UN GIORNO &nbsp;·&nbsp; ROSSO = ENTRAMBI</div>
+    <div style="height:10px"></div>
+    <div class="cal" id="calGrid"></div>
+  </div>
+
+  <div class="g2">
+    <div class="card gap0">
+      <div class="card-h">Temperatura massima nel weekend</div>
+      <div class="card-s">SABATO E DOMENICA · T MAX GIORNALIERA</div>
+      <div class="leg">
+        <span class="li"><span class="sq" style="background:rgba(255,176,32,.55)"></span>Sabato</span>
+        <span class="li"><span class="sq" style="background:rgba(255,92,53,.45)"></span>Domenica</span>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="wkndTempChart" role="img" aria-label="Temperatura massima ultimo weekend luglio per anno">T max media 17.7°C, variabilità tra 12 e 24°C.</canvas></div>
+    </div>
+    <div class="card gap0">
+      <div class="card-h">Ultimi 10 anni (2015–2024)</div>
+      <div class="card-s">PATTERN RECENTE</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+        <div style="background:var(--teal-d);border:.5px solid var(--teal-b);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--teal)">5</div><div style="font-size:11px;color:var(--text2)">Weekend asciutti</div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);text-align:right">2016 · 2018<br>2020 · 2022 · 2024</div>
+        </div>
+        <div style="background:var(--amber-d);border:.5px solid var(--amber-b);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--amber)">4</div><div style="font-size:11px;color:var(--text2)">Un giorno piovoso</div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);text-align:right">2015 · 2017<br>2021 · 2023</div>
+        </div>
+        <div style="background:var(--coral-d);border:.5px solid var(--coral-b);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--coral)">1</div><div style="font-size:11px;color:var(--text2)">Entrambi piovosi</div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);text-align:right">2019</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-amber">
+    <p class="insight">
+      <strong>Verdetto operativo:</strong> la probabilità che entrambi i giorni vengano rovinati è del <mark>7%</mark> — statisticamente marginale. Il rischio concreto è il temporale pomeridiano su un giorno su due (<em>39%</em>): breve, intenso, gestibile. Gli <strong>anni pari hanno storicamente un profilo migliore</strong> — tutti e cinque i weekend asciutti degli ultimi 10 anni cadono in anni pari (2016, 2018, 2020, 2022, 2024). Le temperature sono <strong>ideali per un festival outdoor in quota</strong>: Tmax media 17.7°C, mai sopra 24°C. Comunicare ai partecipanti di portare un layer serale — T min media 8°C.
+    </p>
+  </div>
+</div>
+
+<footer>
+  <span>COLLE BERCIA &nbsp;·&nbsp; OSSERVATORIO CLIMATICO &nbsp;·&nbsp; 10.654 OSSERVAZIONI</span>
+  <span>Fonte: COLLE_BERCIA_p.csv &nbsp;·&nbsp; COLLE_BERCIA_t.csv &nbsp;·&nbsp; 1996–2025</span>
+</footer>
+
+<script>
+/* ── DATA ─────────────────────────────── */
+const MESI=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const M={
+  tMax:[0.8,1.7,3.2,5.5,9.4,14.3,16.8,16.6,12.4,8.6,3.2,1.4],
+  tMed:[-3.5,-3.2,-1.6,0.8,5.0,9.8,11.9,11.8,7.8,4.4,-0.7,-2.6],
+  tMin:[-6.9,-6.9,-5.3,-2.8,1.3,5.8,7.6,7.7,4.1,1.0,-3.7,-5.9],
+  prec:[41,24,49,77,99,79,62,63,67,86,84,46],
+  rain:[20,18,25,32,38,32,37,38,30,35,34,24]
+};
+const YRS=[1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const LBL=YRS.map(y=>String(y).slice(2));
+const AT=[3.23,3.04,2.64,3.08,2.89,2.92,2.91,2.81,2.35,3.26,3.36,2.76,3.15,1.81,4.03,3.57,2.67,3.44,4.36,3.50,3.94,3.50,3.76,3.96,3.03,4.93,4.59,4.38];
+const AP=[605,629,920,1045,811,1119,539,551,650,725,620,585,609,651,668,663,643,376,641,494,275,626,659,786,911,609,1093,1158];
+const FD=[192,193,184,187,187,202,192,187,188,182,187,194,186,202,182,193,193,173,164,194,187,173,199,164,190,153,164,153];
+const HD=[1,13,1,7,6,5,27,6,8,11,3,2,7,7,8,21,11,2,27,20,28,12,23,13,8,24,24,15];
+const LT=[9.69,12.34,10.38,8.96,10.75,10.21,12.45,10.92,11.29,13.22,10.55,11.5,11.92,12.87,9.52,12.09,12.13,9.85,15.22,12.71,12.45,13.08,13.12,12.97,11.8,14.8,13.96,13.84];
+const AGT=[11.34,11.87,11.36,11.65,12.28,9.15,14.18,10.8,9.47,8.51,10.5,11.28,12.58,10.82,12.5,13.32,11.37,10.16,11.22,12.37,13.37,12.15,12.85,12.47,11.45,12.6,13.0,14.07];
+const LH=[0,7,0,2,2,0,8,3,4,8,0,0,3,4,0,3,6,1,19,10,6,4,10,6,2,17,8,7];
+const AGH=[1,5,1,5,3,0,14,2,0,0,3,1,4,3,5,15,5,0,6,7,11,5,6,7,5,2,12,7];
+const SP=[0,0,6.6,0,9.4,0,0,0,0,0,0,29.8,0,0,0.6,2.4,0,1.0,3.0,0.2,8.2,0,16.0,0,11.8,0,13.0,0];
+const DP=[0,4.2,0,0,12.4,0.4,10.6,0,0,0,0,0.2,0,0,0,0,0,0,0,15.6,0,0,4.6,0,0,0,0,0];
+const ST=[15.3,20.6,12.1,13.0,16.9,18.1,20.0,21.5,16.7,17.6,19.2,16.2,16.9,15.9,14.2,18.2,22.1,14.2,17.6,20.3,18.0,19.3,14.1,17.8,16.0,19.6,18.5,19.9];
+const DT=[19.6,20.8,13.5,15.2,17.5,15.5,20.4,18.7,17.0,20.5,17.9,15.8,18.0,15.2,14.7,17.7,20.6,16.9,17.7,18.1,20.9,18.6,13.3,17.8,17.3,20.9,17.6,23.8];
+
+/* ── CHART HELPERS ────────────────────── */
+Chart.defaults.font.family="'JetBrains Mono',monospace";
+Chart.defaults.font.size=10;
+Chart.defaults.color='#3A4D68';
+
+const GR='rgba(255,255,255,0.04)',TK='#3A4D68';
+const xA=(sk=true,mx=14)=>({ticks:{color:TK,autoSkip:sk,maxTicksLimit:mx,maxRotation:0},grid:{color:GR}});
+const yA=(cb)=>({ticks:{color:TK,callback:cb},grid:{color:GR}});
+
+function linReg(xs,ys){
+  const n=xs.length,mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
+  let nm=0,dn=0;xs.forEach((x,i)=>{nm+=(x-mx)*(ys[i]-my);dn+=(x-mx)**2;});
+  const s=nm/dn,ic=my-s*mx;return xs.map(x=>+(s*x+ic).toFixed(2));
+}
+
+/* ── TAB SYSTEM ───────────────────────── */
+const done={};
+function showTab(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(!done[name]){done[name]=1;({panoramica:initPan,temperature:initTemp,precipitazioni:initPrecip,estate:initEstate,festival:initFest})[name]?.()}
+}
+
+/* ── PANORAMICA ───────────────────────── */
+function initPan(){
+  new Chart(document.getElementById('climoChart'),{type:'bar',data:{labels:MESI,datasets:[
+    {type:'bar',data:M.prec,backgroundColor:'rgba(59,158,255,.42)',borderColor:'#3B9EFF',borderWidth:1,yAxisID:'yP',order:2,label:'Precip'},
+    {type:'line',data:M.tMax,borderColor:'#FF5C35',borderWidth:2,pointRadius:4,pointBackgroundColor:'#FF5C35',backgroundColor:'transparent',tension:.4,yAxisID:'yT',order:1,label:'Tmax'},
+    {type:'line',data:M.tMed,borderColor:'#00D0A0',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#00D0A0',backgroundColor:'rgba(0,208,160,.06)',fill:true,tension:.4,yAxisID:'yT',order:1,label:'Tmed'},
+    {type:'line',data:M.tMin,borderColor:'#7AB8F0',borderWidth:1.5,borderDash:[4,3],pointRadius:3,pointBackgroundColor:'#7AB8F0',backgroundColor:'transparent',tension:.4,yAxisID:'yT',order:1,label:'Tmin'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{x:xA(false),yT:{type:'linear',position:'left',ticks:{color:TK,callback:v=>v+'°C'},grid:{color:GR}},yP:{type:'linear',position:'right',ticks:{color:TK,callback:v=>v+'mm'},grid:{display:false},min:0}}
+  }});
+}
+
+/* ── TEMPERATURE ──────────────────────── */
+function initTemp(){
+  const tr=linReg(YRS,AT);
+  new Chart(document.getElementById('tempTrendChart'),{type:'line',data:{labels:LBL,datasets:[
+    {data:AT,borderColor:'#00D0A0',borderWidth:1.5,pointRadius:3.5,pointBackgroundColor:'#00D0A0',backgroundColor:'rgba(0,208,160,.07)',fill:true,tension:.2,label:'T media'},
+    {data:tr,borderColor:'rgba(255,92,53,.75)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent',tension:0,label:'Trend'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'°C'}}},
+    scales:{x:xA(),y:yA(v=>v+'°C')}
+  }});
+  new Chart(document.getElementById('frostChart'),{type:'bar',data:{labels:LBL,datasets:[
+    {data:FD,backgroundColor:FD.map(v=>v>190?'rgba(122,184,240,.72)':'rgba(122,184,240,.35)'),borderColor:'#7AB8F0',borderWidth:1,label:'Gelo'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:xA(true,10),y:yA(v=>v+'gg')}}});
+  new Chart(document.getElementById('hotChart'),{type:'bar',data:{labels:LBL,datasets:[
+    {data:HD,backgroundColor:HD.map(v=>v>=20?'rgba(255,92,53,.8)':v>=10?'rgba(255,176,32,.65)':'rgba(255,176,32,.32)'),borderColor:'#FFB020',borderWidth:1,label:'Caldo'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:xA(true,10),y:yA(v=>v+'gg')}}});
+}
+
+/* ── PRECIPITAZIONI ───────────────────── */
+function initPrecip(){
+  new Chart(document.getElementById('precipAnnChart'),{type:'bar',data:{labels:LBL,datasets:[
+    {data:AP,backgroundColor:AP.map(v=>v>=700?'rgba(59,158,255,.68)':'rgba(59,158,255,.28)'),borderColor:'#3B9EFF',borderWidth:1,label:'Precip'},
+    {type:'line',data:AP.map(()=>700),borderColor:'rgba(140,158,180,.5)',borderDash:[5,4],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent',label:'Media'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:xA(),y:{min:0,ticks:{color:TK,callback:v=>v+'mm'},grid:{color:GR}}}}});
+  new Chart(document.getElementById('precipMonthChart'),{type:'bar',data:{labels:MESI,datasets:[
+    {data:M.prec,backgroundColor:M.prec.map(v=>v>=80?'rgba(59,158,255,.7)':'rgba(59,158,255,.38)'),borderColor:'#3B9EFF',borderWidth:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:xA(false),y:{min:0,ticks:{color:TK,callback:v=>v+'mm'},grid:{color:GR}}}}});
+  new Chart(document.getElementById('rainDaysChart'),{type:'bar',data:{labels:MESI,datasets:[
+    {data:M.rain,backgroundColor:'rgba(0,208,160,.4)',borderColor:'#00D0A0',borderWidth:1}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:xA(false),y:{min:0,ticks:{color:TK,callback:v=>v+'%'},grid:{color:GR}}}}});
+}
+
+/* ── ESTATE ───────────────────────────── */
+function initEstate(){
+  const lt=linReg(YRS,LT),at=linReg(YRS,AGT);
+  new Chart(document.getElementById('estateChart'),{type:'line',data:{labels:LBL,datasets:[
+    {data:LT,borderColor:'#FFB020',backgroundColor:'rgba(255,176,32,.07)',borderWidth:1.5,pointRadius:3,pointBackgroundColor:'#FFB020',fill:true,tension:.2,label:'Luglio'},
+    {data:AGT,borderColor:'#00D0A0',backgroundColor:'rgba(0,208,160,.06)',borderWidth:1.5,pointRadius:3,pointBackgroundColor:'#00D0A0',fill:true,tension:.2,label:'Agosto'},
+    {data:lt,borderColor:'rgba(255,92,53,.65)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent',tension:0,label:'Trend Lug'},
+    {data:at,borderColor:'rgba(0,208,160,.42)',borderDash:[6,4],borderWidth:1.5,pointRadius:0,backgroundColor:'transparent',tension:0,label:'Trend Ago'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'°C'}}},
+    scales:{x:xA(),y:yA(v=>v+'°C')}
+  }});
+  new Chart(document.getElementById('hotEstateChart'),{type:'bar',data:{labels:LBL,datasets:[
+    {data:LH,backgroundColor:'rgba(255,176,32,.65)',borderColor:'#FFB020',borderWidth:1,label:'Luglio'},
+    {data:AGH,backgroundColor:'rgba(0,208,160,.55)',borderColor:'#00D0A0',borderWidth:1,label:'Agosto'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{x:xA(),y:{min:0,ticks:{color:TK,callback:v=>v+'gg'},grid:{color:GR}}}
+  }});
+}
+
+/* ── FESTIVAL ─────────────────────────── */
+function initFest(){
+  // Weekend precip
+  new Chart(document.getElementById('weekendPrecipChart'),{type:'bar',data:{labels:LBL,datasets:[
+    {data:SP,backgroundColor:SP.map(v=>v>=1?'rgba(59,158,255,.75)':'rgba(59,158,255,.12)'),borderColor:'#3B9EFF',borderWidth:1,label:'Sabato'},
+    {data:DP,backgroundColor:DP.map(v=>v>=1?'rgba(0,208,160,.7)':'rgba(0,208,160,.12)'),borderColor:'#00D0A0',borderWidth:1,label:'Domenica'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'mm'}}},
+    scales:{x:xA(),y:{min:0,ticks:{color:TK,callback:v=>v+'mm'},grid:{color:GR}}}
+  }});
+
+  // Intensity histogram
+  const rain=[...SP,...DP].filter(v=>v>=1);
+  const bins=[0,0,0,0,0,0,0];
+  rain.forEach(v=>{if(v<5)bins[0]++;else if(v<10)bins[1]++;else if(v<15)bins[2]++;else if(v<20)bins[3]++;else if(v<25)bins[4]++;else if(v<30)bins[5]++;else bins[6]++;});
+  new Chart(document.getElementById('intensityChart'),{type:'bar',data:{
+    labels:['1–5','5–10','10–15','15–20','20–25','25–30','30+'],
+    datasets:[{data:bins,
+      backgroundColor:['rgba(59,158,255,.6)','rgba(59,158,255,.6)','rgba(255,176,32,.65)','rgba(255,176,32,.65)','rgba(255,92,53,.65)','rgba(255,92,53,.7)','rgba(255,92,53,.82)'],
+      borderColor:['#3B9EFF','#3B9EFF','#FFB020','#FFB020','#FF5C35','#FF5C35','#FF5C35'],borderWidth:1}]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' giorni'}}},
+    scales:{x:{ticks:{color:TK,autoSkip:false,maxRotation:0},grid:{color:GR},title:{display:true,text:'mm',color:TK,font:{size:9}}},y:{ticks:{color:TK,stepSize:1},grid:{color:GR}}}
+  }});
+
+  // Weekend Tmax
+  new Chart(document.getElementById('wkndTempChart'),{type:'bar',data:{labels:LBL,datasets:[
+    {data:ST,backgroundColor:'rgba(255,176,32,.48)',borderColor:'#FFB020',borderWidth:1,label:'Sabato'},
+    {data:DT,backgroundColor:'rgba(255,92,53,.38)',borderColor:'#FF5C35',borderWidth:1,label:'Domenica'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'°C'}}},
+    scales:{x:xA(true,10),y:{ticks:{color:TK,callback:v=>v+'°C'},grid:{color:GR}}}
+  }});
+
+  // Calendar
+  const calData=[
+    {y:1997,s:0,d:0},{y:1998,s:0,d:4.2},{y:1999,s:6.6,d:0},
+    {y:2000,s:0,d:0},{y:2001,s:9.4,d:12.4},{y:2002,s:0,d:0.4},
+    {y:2003,s:0,d:10.6},{y:2004,s:0,d:0},{y:2005,s:0,d:0},
+    {y:2006,s:0,d:0},{y:2007,s:0,d:0},{y:2008,s:29.8,d:0.2},
+    {y:2009,s:0,d:0},{y:2010,s:0,d:0},{y:2011,s:0.6,d:0},
+    {y:2012,s:2.4,d:0},{y:2013,s:0,d:0},{y:2014,s:1.0,d:0},
+    {y:2015,s:3.0,d:0},{y:2016,s:0.2,d:15.6},{y:2017,s:8.2,d:0},
+    {y:2018,s:0,d:0},{y:2019,s:16.0,d:4.6},{y:2020,s:0,d:0},
+    {y:2021,s:11.8,d:0},{y:2022,s:0,d:0},{y:2023,s:13.0,d:0},
+    {y:2024,s:0,d:0}
+  ];
+  const g=document.getElementById('calGrid');
+  calData.forEach(d=>{
+    const sr=d.s>=1,dr=d.d>=1;
+    let cls,ico,det;
+    if(sr&&dr){cls='both';ico='⛈';det=`S:${d.s.toFixed(0)}mm D:${d.d.toFixed(0)}mm`;}
+    else if(sr){cls='one';ico='🌦';det=`Sab ${d.s.toFixed(0)}mm`;}
+    else if(dr){cls='one';ico='🌦';det=`Dom ${d.d.toFixed(0)}mm`;}
+    else{cls='dry';ico='☀';det='0 mm';}
+    const c=document.createElement('div');
+    c.className=`cel ${cls}`;
+    c.innerHTML=`<div class="cyr">${d.y}</div><div class="cico">${ico}</div><div class="cdet">${det}</div>`;
+    g.appendChild(c);
+  });
+}
+
+/* ── BOOT ─────────────────────────────── */
+done['panoramica']=1;initPan();
+</script>
+</body>
+</html>
